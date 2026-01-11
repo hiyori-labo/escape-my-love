@@ -1056,9 +1056,25 @@ async function init() {
         if (!gameState.apiKey) {
             addSystemMessage('Gemini APIキーを設定してください（メニュー → API Key設定）');
         }
-        // Returning user - start game directly
-        await startNewGame();
+
+        // Show start button instead of auto-starting
+        showStartButton();
     }
+}
+
+function showStartButton() {
+    const startDiv = document.createElement('div');
+    startDiv.className = 'start-trigger';
+    startDiv.innerHTML = `
+        <p class="start-message">セーブデータをロードする場合はメニュー（☰）から「📂 ロード」を選択してください</p>
+        <button class="start-btn">✨ 物語を始める</button>
+    `;
+    elements.chatArea.appendChild(startDiv);
+
+    startDiv.querySelector('.start-btn').addEventListener('click', async () => {
+        startDiv.remove();
+        await startNewGame();
+    });
 }
 
 // Start when DOM is ready

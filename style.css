@@ -410,6 +410,43 @@ body {
     background: var(--bg-secondary);
 }
 
+/* Start Button */
+.start-trigger {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-xl);
+    min-height: 50vh;
+    text-align: center;
+}
+
+.start-message {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.start-btn {
+    padding: var(--spacing-md) var(--spacing-xl);
+    background: linear-gradient(135deg, var(--accent-rose) 0%, var(--accent-burgundy) 100%);
+    border: none;
+    border-radius: var(--radius-lg);
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    box-shadow: 0 4px 15px rgba(196, 82, 106, 0.3);
+}
+
+.start-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(196, 82, 106, 0.4);
+}
+
 /* ========================================
    Input Area
 ======================================== */
