@@ -30,10 +30,12 @@ const gameState = {
     escapeProgress: 0,
     loveTrap: 0,
     history: [],
+    turnLogs: [],
     isProcessing: false,
     apiKey: localStorage.getItem('gemini_api_key') || '',
     isGameOver: false,
-    pendingEnding: null
+    pendingEnding: null,
+    currentEpilogue: ''
 };
 
 // Load settings from storage
@@ -86,6 +88,8 @@ const elements = {
     endingTitle: document.getElementById('endingTitle'),
     endingText: document.getElementById('endingText'),
     endingBtn: document.getElementById('endingBtn'),
+    copyFullLogBtn: document.getElementById('copyFullLogBtn'),
+    copyEpilogueBtn: document.getElementById('copyEpilogueBtn'),
     // Settings elements
     settingsBtn: document.getElementById('settingsBtn'),
     settingsOverlay: document.getElementById('settingsOverlay'),
@@ -279,6 +283,104 @@ function hideTypingIndicator() {
 
 function scrollToBottom() {
     elements.chatArea.scrollTop = elements.chatArea.scrollHeight;
+}
+
+// ========================================
+// Log Copy Functions
+// ========================================
+
+function formatTurnLog(turnData) {
+    const s = characterSettings;
+    let text = `🎮 Escape My Love - Turn Log\n`;
+    text += `━━━━━━━━━━━━━━━━━━━━\n`;
+    text += `🗣️ プレイヤー: ${turnData.playerInput}\n\n`;
+    text += `📖 ${s.partnerName}:\n`;
+    if (turnData.narrative) {
+        text += `${turnData.narrative}\n`;
+    }
+    if (turnData.dialogue) {
+        text += `${turnData.dialogue}\n`;
+    }
+    text += `\n`;
+    const escSign = turnData.escapeChange > 0 ? `+${turnData.escapeChange}` : '0';
+    const loveSign = turnData.loveChange > 0 ? `+${turnData.loveChange}` : '0';
+    text += `📊 パラメータ変動: 🚪脱出度 ${escSign} / 💕絆され度 ${loveSign}\n`;
+    text += `📊 現在値: 🚪脱出度 ${turnData.currentEscape} / 💕絆され度 ${turnData.currentLove}\n`;
+    text += `━━━━━━━━━━━━━━━━━━━━`;
+    return text;
+}
+
+function formatFullLog(endingType) {
+    const s = characterSettings;
+    const result = endingType === 'escape' ? '🚪 脱出成功' : '💕 永住確定';
+    let text = `🎮 Escape My Love - Full Game Log\n`;
+    text += `結果: ${result}\n`;
+    text += `━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+    gameState.turnLogs.forEach((turn, i) => {
+        text += `--- Turn ${i + 1} ---\n`;
+        text += `🗣️ プレイヤー: ${turn.playerInput}\n`;
+        text += `📖 ${s.partnerName}:\n`;
+        if (turn.narrative) {
+            text += `${turn.narrative}\n`;
+        }
+        if (turn.dialogue) {
+            text += `${turn.dialogue}\n`;
+        }
+        const escSign = turn.escapeChange > 0 ? `+${turn.escapeChange}` : '0';
+        const loveSign = turn.loveChange > 0 ? `+${turn.loveChange}` : '0';
+        text += `📊 変動: 🚪脱出度 ${escSign} / 💕絆され度 ${loveSign}\n`;
+        text += `📊 現在値: 🚪脱出度 ${turn.currentEscape} / 💕絆され度 ${turn.currentLove}\n\n`;
+    });
+
+    if (gameState.currentEpilogue) {
+        text += `--- Epilogue ---\n`;
+        text += `${gameState.currentEpilogue}\n\n`;
+    }
+
+    return text.trim();
+}
+
+async function copyToClipboard(text, buttonEl) {
+    try {
+        await navigator.clipboard.writeText(text);
+        const originalText = buttonEl.textContent;
+        buttonEl.textContent = '✓ コピー済み';
+        buttonEl.classList.add('copied');
+        setTimeout(() => {
+            buttonEl.textContent = originalText;
+            buttonEl.classList.remove('copied');
+        }, 1500);
+    } catch (err) {
+        // Fallback for older browsers
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        const originalText = buttonEl.textContent;
+        buttonEl.textContent = '✓ コピー済み';
+        buttonEl.classList.add('copied');
+        setTimeout(() => {
+            buttonEl.textContent = originalText;
+            buttonEl.classList.remove('copied');
+        }, 1500);
+    }
+}
+
+function showCopyButton(turnData) {
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'copy-log-btn';
+    copyBtn.textContent = '📋 ログをコピー';
+    copyBtn.addEventListener('click', () => {
+        const logText = formatTurnLog(turnData);
+        copyToClipboard(logText, copyBtn);
+    });
+    elements.chatArea.appendChild(copyBtn);
+    scrollToBottom();
 }
 
 // ========================================
@@ -511,6 +613,24 @@ function showRetryButton(lastInput) {
                 addSystemMessage(`💕 絆され度 +${response.love_change}`);
             }
 
+            // Update the last turn log entry after retry
+            const retryTurnData = {
+                playerInput: lastInput,
+                narrative: response.narrative || '',
+                dialogue: response.dialogue || '',
+                escapeChange: response.escape_change || 0,
+                loveChange: response.love_change || 0,
+                currentEscape: gameState.escapeProgress,
+                currentLove: gameState.loveTrap
+            };
+            // Replace last turn log if exists, otherwise push new
+            if (gameState.turnLogs.length > 0) {
+                gameState.turnLogs[gameState.turnLogs.length - 1] = retryTurnData;
+            } else {
+                gameState.turnLogs.push(retryTurnData);
+            }
+            showCopyButton(retryTurnData);
+
             if (gameState.pendingEnding) {
                 gameState.isGameOver = true;
                 showEpilogueButton(gameState.pendingEnding);
@@ -545,6 +665,7 @@ function showEpilogueButton(type) {
 
 async function triggerEnding(type) {
     gameState.isGameOver = true;
+    gameState.endingType = type;
 
     // Set title immediately
     if (type === 'escape') {
@@ -561,6 +682,7 @@ async function triggerEnding(type) {
 
     // Generate dynamic epilogue
     const epilogue = await generateEpilogue(type);
+    gameState.currentEpilogue = epilogue;
     elements.endingText.textContent = epilogue;
 }
 
@@ -837,6 +959,19 @@ async function processPlayerInput(input) {
             addSystemMessage(`💕 絆され度 +${response.love_change}`);
         }
 
+        // Record turn log and show copy button
+        const turnData = {
+            playerInput: input,
+            narrative: response.narrative || '',
+            dialogue: response.dialogue || '',
+            escapeChange: response.escape_change || 0,
+            loveChange: response.love_change || 0,
+            currentEscape: gameState.escapeProgress,
+            currentLove: gameState.loveTrap
+        };
+        gameState.turnLogs.push(turnData);
+        showCopyButton(turnData);
+
         // Check if ending is pending
         if (gameState.pendingEnding) {
             gameState.isGameOver = true;
@@ -855,9 +990,11 @@ async function startNewGame() {
     gameState.escapeProgress = 0;
     gameState.loveTrap = 0;
     gameState.history = [];
+    gameState.turnLogs = [];
     gameState.isGameOver = false;
     gameState.isProcessing = false;
     gameState.pendingEnding = null;
+    gameState.currentEpilogue = '';
 
     // Reset UI
     elements.chatArea.innerHTML = '';
@@ -949,6 +1086,22 @@ elements.apiKeySave.addEventListener('click', () => {
 
 // Ending button
 elements.endingBtn.addEventListener('click', startNewGame);
+
+// Epilogue log copy button
+if (elements.copyEpilogueBtn) {
+    elements.copyEpilogueBtn.addEventListener('click', () => {
+        if (gameState.currentEpilogue) {
+            const epilogueText = `--- Epilogue ---\n${gameState.currentEpilogue}`;
+            copyToClipboard(epilogueText, elements.copyEpilogueBtn);
+        }
+    });
+}
+
+// Full log copy button
+elements.copyFullLogBtn.addEventListener('click', () => {
+    const logText = formatFullLog(gameState.endingType || 'love');
+    copyToClipboard(logText, elements.copyFullLogBtn);
+});
 
 // ========================================
 // Settings
