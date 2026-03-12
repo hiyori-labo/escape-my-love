@@ -9,6 +9,7 @@
 
 const SAVE_KEY_PREFIX = 'crows_cage_save_';
 const SETTINGS_KEY = 'crows_cage_settings';
+const GAME_SETTINGS_KEY = 'crows_cage_game_settings';
 const MAX_SAVE_SLOTS = 3;
 
 // Default character settings
@@ -57,6 +58,30 @@ function saveSettings(settings) {
 
 let characterSettings = loadSettings();
 
+// Game display settings
+const DEFAULT_GAME_SETTINGS = {
+    showHint: true,
+    showParamChange: true
+};
+
+function loadGameSettings() {
+    const saved = localStorage.getItem(GAME_SETTINGS_KEY);
+    if (saved) {
+        try {
+            return { ...DEFAULT_GAME_SETTINGS, ...JSON.parse(saved) };
+        } catch (e) {
+            return { ...DEFAULT_GAME_SETTINGS };
+        }
+    }
+    return { ...DEFAULT_GAME_SETTINGS };
+}
+
+function saveGameSettings(settings) {
+    localStorage.setItem(GAME_SETTINGS_KEY, JSON.stringify(settings));
+}
+
+let gameSettings = loadGameSettings();
+
 // ========================================
 // DOM Elements
 // ========================================
@@ -102,6 +127,12 @@ const elements = {
     settingsPartnerSecondPerson: document.getElementById('settingsPartnerSecondPerson'),
     settingsRelationship: document.getElementById('settingsRelationship'),
     settingsGameSetting: document.getElementById('settingsGameSetting'),
+    // Game settings elements
+    gameSettingsBtn: document.getElementById('gameSettingsBtn'),
+    gameSettingsOverlay: document.getElementById('gameSettingsOverlay'),
+    gameSettingsClose: document.getElementById('gameSettingsClose'),
+    showHintToggle: document.getElementById('showHintToggle'),
+    showParamChangeToggle: document.getElementById('showParamChangeToggle'),
     // Terms elements
     termsBtn: document.getElementById('termsBtn'),
     termsOverlay: document.getElementById('termsOverlay'),
@@ -606,11 +637,13 @@ function showRetryButton(lastInput) {
 
             updateParameters(response.escape_change || 0, response.love_change || 0);
 
-            if (response.escape_change > 0) {
-                addSystemMessage(`🚪 脱出度 +${response.escape_change}`);
-            }
-            if (response.love_change > 0) {
-                addSystemMessage(`💕 絆され度 +${response.love_change}`);
+            if (gameSettings.showParamChange) {
+                if (response.escape_change > 0) {
+                    addSystemMessage(`🚪 脱出度 +${response.escape_change}`);
+                }
+                if (response.love_change > 0) {
+                    addSystemMessage(`💕 絆され度 +${response.love_change}`);
+                }
             }
 
             // Update the last turn log entry after retry
@@ -914,7 +947,7 @@ function formatCrowMessage(response) {
         message += `<p>${response.dialogue}</p>`;
     }
 
-    if (response.hint) {
+    if (response.hint && gameSettings.showHint) {
         message += `<p style="color: var(--text-muted); margin-top: 12px; font-size: 0.85rem;">💭 ${response.hint}</p>`;
     }
 
@@ -952,11 +985,13 @@ async function processPlayerInput(input) {
         updateParameters(response.escape_change || 0, response.love_change || 0);
 
         // Show parameter change feedback
-        if (response.escape_change > 0) {
-            addSystemMessage(`🚪 脱出度 +${response.escape_change}`);
-        }
-        if (response.love_change > 0) {
-            addSystemMessage(`💕 絆され度 +${response.love_change}`);
+        if (gameSettings.showParamChange) {
+            if (response.escape_change > 0) {
+                addSystemMessage(`🚪 脱出度 +${response.escape_change}`);
+            }
+            if (response.love_change > 0) {
+                addSystemMessage(`💕 絆され度 +${response.love_change}`);
+            }
         }
 
         // Record turn log and show copy button
@@ -1171,6 +1206,38 @@ elements.settingsOverlay.addEventListener('click', (e) => {
 });
 
 elements.settingsSave.addEventListener('click', saveAndStartNewGame);
+
+// Game Settings
+function openGameSettingsOverlay() {
+    elements.showHintToggle.checked = gameSettings.showHint;
+    elements.showParamChangeToggle.checked = gameSettings.showParamChange;
+    elements.gameSettingsOverlay.classList.add('active');
+    elements.menuOverlay.classList.remove('active');
+}
+
+function closeGameSettingsOverlay() {
+    elements.gameSettingsOverlay.classList.remove('active');
+}
+
+elements.gameSettingsBtn.addEventListener('click', openGameSettingsOverlay);
+
+elements.gameSettingsClose.addEventListener('click', closeGameSettingsOverlay);
+
+elements.gameSettingsOverlay.addEventListener('click', (e) => {
+    if (e.target === elements.gameSettingsOverlay) {
+        closeGameSettingsOverlay();
+    }
+});
+
+elements.showHintToggle.addEventListener('change', () => {
+    gameSettings.showHint = elements.showHintToggle.checked;
+    saveGameSettings(gameSettings);
+});
+
+elements.showParamChangeToggle.addEventListener('change', () => {
+    gameSettings.showParamChange = elements.showParamChangeToggle.checked;
+    saveGameSettings(gameSettings);
+});
 
 // Terms overlay
 elements.termsBtn.addEventListener('click', () => {
