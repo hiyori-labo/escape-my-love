@@ -81,6 +81,7 @@
                     <button class="api-key-save" id="apiKeySave">保存</button>
                 </div>
                 <button class="menu-item" id="settingsBtn">⚙️ キャラクター設定</button>
+                <button class="menu-item" id="gameSettingsBtn">🎮 ゲーム設定</button>
                 <button class="menu-item menu-item-secondary" id="termsBtn">📜 利用規約</button>
             </div>
         </div>
@@ -154,6 +155,39 @@
                 </div>
 
                 <button class="settings-save" id="settingsSave">💾 保存してNew Game</button>
+                <p class="settings-note">※ 設定はブラウザに保存されます</p>
+            </div>
+        </div>
+
+        <!-- Game Settings Overlay -->
+        <div class="game-settings-overlay" id="gameSettingsOverlay">
+            <div class="game-settings-content">
+                <button class="menu-close" id="gameSettingsClose">✕</button>
+                <h2>ゲーム設定</h2>
+
+                <div class="settings-section">
+                    <div class="toggle-item">
+                        <div class="toggle-info">
+                            <span class="toggle-label">ナビゲーション表示</span>
+                            <span class="toggle-description">次に何をするかのヒントを表示します</span>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="showHintToggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-item">
+                        <div class="toggle-info">
+                            <span class="toggle-label">パラメータ変動表示</span>
+                            <span class="toggle-description">ターンごとのパラメータ上昇値を表示します</span>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="showParamChangeToggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
                 <p class="settings-note">※ 設定はブラウザに保存されます</p>
             </div>
         </div>

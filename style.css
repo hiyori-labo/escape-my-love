@@ -1177,6 +1177,140 @@ body {
 }
 
 /* ========================================
+   Game Settings Overlay
+======================================== */
+
+.game-settings-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg-overlay);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 175;
+    opacity: 0;
+    visibility: hidden;
+    transition: all var(--transition-normal);
+}
+
+.game-settings-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.game-settings-content {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    width: 90%;
+    max-width: 400px;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    transform: scale(0.9);
+    transition: transform var(--transition-normal);
+}
+
+.game-settings-overlay.active .game-settings-content {
+    transform: scale(1);
+}
+
+.game-settings-content h2 {
+    font-family: var(--font-display);
+    color: var(--accent-rose-light);
+    margin-bottom: var(--spacing-lg);
+    text-align: center;
+    padding-right: var(--spacing-xl);
+}
+
+/* Toggle Items */
+.toggle-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md) 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.toggle-item:last-child {
+    border-bottom: none;
+}
+
+.toggle-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    flex: 1;
+    margin-right: var(--spacing-md);
+}
+
+.toggle-label {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.toggle-description {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 26px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 26px;
+    transition: all var(--transition-normal);
+}
+
+.toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    left: 2px;
+    bottom: 2px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    transition: all var(--transition-normal);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background: var(--accent-rose-dark);
+    border-color: var(--accent-rose);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+    background: var(--accent-rose-light);
+    transform: translateX(22px);
+}
+
+/* ========================================
    Accessibility
 ======================================== */
 
