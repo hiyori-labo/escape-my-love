@@ -1,4 +1,4 @@
-const GEMINI_MODEL = 'gemini-2.0-flash';
+const GEMINI_MODEL = 'gemini-3-flash-preview';
 
 // Simple in-memory rate limiter (resets on cold start)
 const rateLimitMap = new Map();
