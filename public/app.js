@@ -33,7 +33,6 @@ const gameState = {
     history: [],
     turnLogs: [],
     isProcessing: false,
-    apiKey: localStorage.getItem('gemini_api_key') || '',
     isGameOver: false,
     pendingEnding: null,
     currentEpilogue: ''
@@ -101,10 +100,6 @@ const elements = {
     newGameBtn: document.getElementById('newGameBtn'),
     saveBtn: document.getElementById('saveBtn'),
     loadBtn: document.getElementById('loadBtn'),
-    apiKeyBtn: document.getElementById('apiKeyBtn'),
-    apiKeySection: document.getElementById('apiKeySection'),
-    apiKeyInput: document.getElementById('apiKeyInput'),
-    apiKeySave: document.getElementById('apiKeySave'),
     saveLoadOverlay: document.getElementById('saveLoadOverlay'),
     saveLoadTitle: document.getElementById('saveLoadTitle'),
     saveLoadSlots: document.getElementById('saveLoadSlots'),
@@ -200,10 +195,6 @@ function getDefaultOpeningMessage() {
 }
 
 async function generateOpeningMessage() {
-    if (!gameState.apiKey) {
-        return getDefaultOpeningMessage();
-    }
-
     const s = characterSettings;
     const prompt = `あなたは恋愛脱出ゲームのオープニングを生成するライターです。
 
@@ -228,12 +219,12 @@ async function generateOpeningMessage() {
 }`;
 
     try {
-        const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${gameState.apiKey}`,
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                type: 'opening',
+                body: {
                     contents: [{ role: 'user', parts: [{ text: prompt }] }],
                     generationConfig: { temperature: 0.8 },
                     safetySettings: [
@@ -242,9 +233,9 @@ async function generateOpeningMessage() {
                         { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
                         { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
                     ]
-                })
-            }
-        );
+                }
+            })
+        });
 
         if (!response.ok) throw new Error('API Error');
 
@@ -720,10 +711,6 @@ async function triggerEnding(type) {
 }
 
 async function generateEpilogue(type) {
-    if (!gameState.apiKey) {
-        return getDefaultEpilogue(type);
-    }
-
     const s = characterSettings;
     const endingType = type === 'escape' ? '脱出成功' : '永住確定';
 
@@ -756,12 +743,12 @@ ${historyText}
 - 純粋にエピローグのテキストのみを返す（JSON形式不要）`;
 
     try {
-        const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${gameState.apiKey}`,
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                type: 'epilogue',
+                body: {
                     contents: [{ role: 'user', parts: [{ text: epiloguePrompt }] }],
                     generationConfig: {
                         temperature: 0.8
@@ -772,9 +759,9 @@ ${historyText}
                         { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
                         { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
                     ]
-                })
-            }
-        );
+                }
+            })
+        });
 
         if (!response.ok) {
             throw new Error('API Error');
@@ -807,11 +794,6 @@ function getDefaultEpilogue(type) {
 // ========================================
 
 async function callGeminiAPI(userMessage, isRetry = false) {
-    if (!gameState.apiKey) {
-        addSystemMessage('APIキーが設定されていません。メニューから設定してください。');
-        return null;
-    }
-
     // Only add user message to history on first attempt
     if (!isRetry) {
         gameState.history.push({
@@ -847,16 +829,11 @@ async function callGeminiAPI(userMessage, isRetry = false) {
     };
 
     try {
-        const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${gameState.apiKey}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(requestBody)
-            }
-        );
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'chat', body: requestBody })
+        });
 
         if (!response.ok) {
             const error = await response.json();
@@ -1072,13 +1049,11 @@ elements.menuBtn.addEventListener('click', () => {
 
 elements.menuClose.addEventListener('click', () => {
     elements.menuOverlay.classList.remove('active');
-    elements.apiKeySection.classList.remove('active');
 });
 
 elements.menuOverlay.addEventListener('click', (e) => {
     if (e.target === elements.menuOverlay) {
         elements.menuOverlay.classList.remove('active');
-        elements.apiKeySection.classList.remove('active');
     }
 });
 
@@ -1104,19 +1079,6 @@ elements.saveLoadOverlay.addEventListener('click', (e) => {
     if (e.target === elements.saveLoadOverlay) {
         closeSaveLoadOverlay();
     }
-});
-
-// API Key
-elements.apiKeyBtn.addEventListener('click', () => {
-    elements.apiKeySection.classList.toggle('active');
-    elements.apiKeyInput.value = gameState.apiKey;
-});
-
-elements.apiKeySave.addEventListener('click', () => {
-    gameState.apiKey = elements.apiKeyInput.value.trim();
-    localStorage.setItem('gemini_api_key', gameState.apiKey);
-    elements.apiKeySection.classList.remove('active');
-    addSystemMessage('APIキーを保存しました');
 });
 
 // Ending button
@@ -1270,13 +1232,8 @@ async function init() {
     if (!hasSettings) {
         // First time - show welcome message
         addSystemMessage('ようこそ Escape My Love へ');
-        addSystemMessage('メニュー（☰）から「🔑 API Key設定」と「⚙️ キャラクター設定」を行ってからゲームを始めてください。');
+        addSystemMessage('メニュー（☰）から「⚙️ キャラクター設定」を行ってからゲームを始めてください。');
     } else {
-        // Check for API key
-        if (!gameState.apiKey) {
-            addSystemMessage('Gemini APIキーを設定してください（メニュー → API Key設定）');
-        }
-
         // Show start button instead of auto-starting
         showStartButton();
     }
