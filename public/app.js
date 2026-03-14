@@ -11,6 +11,8 @@ const SAVE_KEY_PREFIX = 'crows_cage_save_';
 const SETTINGS_KEY = 'crows_cage_settings';
 const GAME_SETTINGS_KEY = 'crows_cage_game_settings';
 const USER_API_KEY_STORAGE_KEY = 'crows_cage_user_api_key';
+const DAILY_TURN_KEY = 'crows_cage_daily_turns';
+const MAX_DAILY_TURNS = 15;
 const MAX_SAVE_SLOTS = 3;
 
 // Default character settings
@@ -228,6 +230,11 @@ async function generateOpeningMessage() {
 }`;
 
     try {
+        if (!checkAndIncrementApiLimit()) {
+            showRateLimitMessage();
+            return null;
+        }
+
         const response = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -757,6 +764,11 @@ ${historyText}
 - 純粋にエピローグのテキストのみを返す（JSON形式不要）`;
 
     try {
+        if (!checkAndIncrementApiLimit()) {
+            showRateLimitMessage();
+            return getDefaultEpilogue(type);
+        }
+
         const response = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -812,6 +824,35 @@ function getDefaultEpilogue(type) {
 // API Functions
 // ========================================
 
+function checkAndIncrementApiLimit() {
+    if (gameState.userApiKey) return true;
+
+    const today = new Date().toDateString();
+    let turnData = { date: today, count: 0 };
+    
+    try {
+        const saved = localStorage.getItem(DAILY_TURN_KEY);
+        if (saved) {
+            turnData = JSON.parse(saved);
+        }
+    } catch (e) {
+        // use default
+    }
+
+    if (turnData.date !== today) {
+        turnData = { date: today, count: 0 };
+    }
+
+    if (turnData.count >= MAX_DAILY_TURNS) {
+        return false;
+    }
+
+    turnData.count++;
+    localStorage.setItem(DAILY_TURN_KEY, JSON.stringify(turnData));
+    
+    return true;
+}
+
 async function callGeminiAPI(userMessage, isRetry = false) {
     // Only add user message to history on first attempt
     if (!isRetry) {
@@ -848,6 +889,11 @@ async function callGeminiAPI(userMessage, isRetry = false) {
     };
 
     try {
+        if (!isRetry && !checkAndIncrementApiLimit()) {
+            showRateLimitMessage();
+            return null;
+        }
+
         const response = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
