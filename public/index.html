@@ -77,6 +77,7 @@
                 <button class="menu-item" id="newGameBtn">🔄 New Game</button>
                 <button class="menu-item" id="settingsBtn">⚙️ キャラクター設定</button>
                 <button class="menu-item" id="gameSettingsBtn">🎮 ゲーム設定</button>
+                <button class="menu-item" id="apiKeyBtn">🔑 APIキー設定</button>
                 <button class="menu-item menu-item-secondary" id="termsBtn">📜 利用規約</button>
             </div>
         </div>
@@ -184,6 +185,31 @@
                 </div>
 
                 <p class="settings-note">※ 設定はブラウザに保存されます</p>
+            </div>
+        </div>
+
+        <!-- API Key Overlay -->
+        <div class="settings-overlay" id="apiKeyOverlay">
+            <div class="settings-content">
+                <button class="menu-close" id="apiKeyClose">✕</button>
+                <h2>🔑 APIキー設定</h2>
+
+                <div class="settings-section">
+                    <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 12px;">
+                        Gemini API キーを設定すると、1日の利用上限なくプレイできます。<br>
+                        キーは <strong>Google AI Studio</strong> (aistudio.google.com) で無料取得できます。
+                    </p>
+                    <label class="settings-label">
+                        API キー
+                        <input type="password" class="settings-input" id="apiKeyInput" placeholder="AIza...">
+                    </label>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px;">
+                        🔒 キーはこのブラウザにのみ保存され、他には送信されません
+                    </p>
+                </div>
+
+                <button class="settings-save" id="apiKeySave">💾 保存</button>
+                <button class="terms-close-btn" id="apiKeyClear" style="margin-top: 8px;">🗑 クリア</button>
             </div>
         </div>
 
