@@ -2,8 +2,8 @@ const GEMINI_MODEL = 'gemini-3-flash-preview';
 
 // Simple in-memory rate limiter (resets on cold start)
 const rateLimitMap = new Map();
-const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
-const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
+const RATE_LIMIT_MAX = 15;
 
 function checkRateLimit(ip) {
     const now = Date.now();
@@ -34,18 +34,20 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const { type, body, userApiKey } = req.body;
+
+    const apiKey = userApiKey || process.env.GEMINI_API_KEY;
     if (!apiKey) {
         return res.status(500).json({ error: 'API key not configured' });
     }
 
-    // Rate limiting
-    const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
-    if (!checkRateLimit(ip)) {
-        return res.status(429).json({ error: 'Rate limit exceeded. Please try again later.' });
+    // Rate limiting (skip if user provided their own API key)
+    if (!userApiKey) {
+        const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
+        if (!checkRateLimit(ip)) {
+            return res.status(429).json({ error: 'RATE_LIMIT_EXCEEDED' });
+        }
     }
-
-    const { type, body } = req.body;
 
     if (!type || !body || !['chat', 'opening', 'epilogue'].includes(type)) {
         return res.status(400).json({ error: 'Invalid request: type must be chat, opening, or epilogue' });

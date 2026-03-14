@@ -10,6 +10,9 @@
 const SAVE_KEY_PREFIX = 'crows_cage_save_';
 const SETTINGS_KEY = 'crows_cage_settings';
 const GAME_SETTINGS_KEY = 'crows_cage_game_settings';
+const USER_API_KEY_STORAGE_KEY = 'crows_cage_user_api_key';
+const DAILY_TURN_KEY = 'crows_cage_daily_turns';
+const MAX_DAILY_TURNS = 15;
 const MAX_SAVE_SLOTS = 3;
 
 // Default character settings
@@ -35,7 +38,8 @@ const gameState = {
     isProcessing: false,
     isGameOver: false,
     pendingEnding: null,
-    currentEpilogue: ''
+    currentEpilogue: '',
+    userApiKey: localStorage.getItem(USER_API_KEY_STORAGE_KEY) || ''
 };
 
 // Load settings from storage
@@ -132,7 +136,14 @@ const elements = {
     termsBtn: document.getElementById('termsBtn'),
     termsOverlay: document.getElementById('termsOverlay'),
     termsClose: document.getElementById('termsClose'),
-    termsCloseBtn: document.getElementById('termsCloseBtn')
+    termsCloseBtn: document.getElementById('termsCloseBtn'),
+    // API key elements
+    apiKeyBtn: document.getElementById('apiKeyBtn'),
+    apiKeyOverlay: document.getElementById('apiKeyOverlay'),
+    apiKeyClose: document.getElementById('apiKeyClose'),
+    apiKeyInput: document.getElementById('apiKeyInput'),
+    apiKeySave: document.getElementById('apiKeySave'),
+    apiKeyClear: document.getElementById('apiKeyClear')
 };
 
 // ========================================
@@ -219,6 +230,11 @@ async function generateOpeningMessage() {
 }`;
 
     try {
+        if (!checkAndIncrementApiLimit()) {
+            showRateLimitMessage();
+            return null;
+        }
+
         const response = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -233,10 +249,15 @@ async function generateOpeningMessage() {
                         { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
                         { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
                     ]
-                }
+                },
+                ...(gameState.userApiKey && { userApiKey: gameState.userApiKey })
             })
         });
 
+        if (response.status === 429) {
+            showRateLimitMessage();
+            return null;
+        }
         if (!response.ok) throw new Error('API Error');
 
         const data = await response.json();
@@ -743,6 +764,11 @@ ${historyText}
 - 純粋にエピローグのテキストのみを返す（JSON形式不要）`;
 
     try {
+        if (!checkAndIncrementApiLimit()) {
+            showRateLimitMessage();
+            return getDefaultEpilogue(type);
+        }
+
         const response = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -759,10 +785,15 @@ ${historyText}
                         { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
                         { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
                     ]
-                }
+                },
+                ...(gameState.userApiKey && { userApiKey: gameState.userApiKey })
             })
         });
 
+        if (response.status === 429) {
+            showRateLimitMessage();
+            return getDefaultEpilogue(type);
+        }
         if (!response.ok) {
             throw new Error('API Error');
         }
@@ -792,6 +823,35 @@ function getDefaultEpilogue(type) {
 // ========================================
 // API Functions
 // ========================================
+
+function checkAndIncrementApiLimit() {
+    if (gameState.userApiKey) return true;
+
+    const today = new Date().toDateString();
+    let turnData = { date: today, count: 0 };
+    
+    try {
+        const saved = localStorage.getItem(DAILY_TURN_KEY);
+        if (saved) {
+            turnData = JSON.parse(saved);
+        }
+    } catch (e) {
+        // use default
+    }
+
+    if (turnData.date !== today) {
+        turnData = { date: today, count: 0 };
+    }
+
+    if (turnData.count >= MAX_DAILY_TURNS) {
+        return false;
+    }
+
+    turnData.count++;
+    localStorage.setItem(DAILY_TURN_KEY, JSON.stringify(turnData));
+    
+    return true;
+}
 
 async function callGeminiAPI(userMessage, isRetry = false) {
     // Only add user message to history on first attempt
@@ -829,12 +889,25 @@ async function callGeminiAPI(userMessage, isRetry = false) {
     };
 
     try {
+        if (!isRetry && !checkAndIncrementApiLimit()) {
+            showRateLimitMessage();
+            return null;
+        }
+
         const response = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: 'chat', body: requestBody })
+            body: JSON.stringify({
+                type: 'chat',
+                body: requestBody,
+                ...(gameState.userApiKey && { userApiKey: gameState.userApiKey })
+            })
         });
 
+        if (response.status === 429) {
+            showRateLimitMessage();
+            return null;
+        }
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.error?.message || 'API Error');
@@ -1025,7 +1098,9 @@ async function startNewGame() {
 
     // Hide loading and show opening
     hideTypingIndicator();
-    addMessage(formatCrowMessage(openingMessage), 'crow');
+    if (openingMessage) {
+        addMessage(formatCrowMessage(openingMessage), 'crow');
+    }
 }
 
 // ========================================
@@ -1200,6 +1275,58 @@ elements.showParamChangeToggle.addEventListener('change', () => {
     gameSettings.showParamChange = elements.showParamChangeToggle.checked;
     saveGameSettings(gameSettings);
 });
+
+// API Key Settings
+function openApiKeyOverlay() {
+    elements.apiKeyInput.value = gameState.userApiKey;
+    elements.apiKeyOverlay.classList.add('active');
+    elements.menuOverlay.classList.remove('active');
+}
+
+function closeApiKeyOverlay() {
+    elements.apiKeyOverlay.classList.remove('active');
+}
+
+elements.apiKeyBtn.addEventListener('click', openApiKeyOverlay);
+
+elements.apiKeyClose.addEventListener('click', closeApiKeyOverlay);
+
+elements.apiKeyOverlay.addEventListener('click', (e) => {
+    if (e.target === elements.apiKeyOverlay) {
+        closeApiKeyOverlay();
+    }
+});
+
+elements.apiKeySave.addEventListener('click', () => {
+    const key = elements.apiKeyInput.value.trim();
+    gameState.userApiKey = key;
+    if (key) {
+        localStorage.setItem(USER_API_KEY_STORAGE_KEY, key);
+    } else {
+        localStorage.removeItem(USER_API_KEY_STORAGE_KEY);
+    }
+    closeApiKeyOverlay();
+    addSystemMessage(key ? '✅ APIキーを設定しました。利用上限なくプレイできます。' : 'APIキーをクリアしました。');
+});
+
+elements.apiKeyClear.addEventListener('click', () => {
+    elements.apiKeyInput.value = '';
+    gameState.userApiKey = '';
+    localStorage.removeItem(USER_API_KEY_STORAGE_KEY);
+    closeApiKeyOverlay();
+    addSystemMessage('APIキーをクリアしました。');
+});
+
+function showRateLimitMessage() {
+    const div = document.createElement('div');
+    div.className = 'message message-system rate-limit-message';
+    div.innerHTML = `本日の無料プレイ上限（15回）に達しました。明日またお楽しみください。<br>
+        自分の Gemini API キーを設定すると上限なく続けられます。<br>
+        <button class="open-api-key-btn" style="margin-top: 8px; padding: 6px 14px; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer;">🔑 APIキーを設定する</button>`;
+    div.querySelector('.open-api-key-btn').addEventListener('click', openApiKeyOverlay);
+    elements.chatArea.appendChild(div);
+    elements.chatArea.scrollTop = elements.chatArea.scrollHeight;
+}
 
 // Terms overlay
 elements.termsBtn.addEventListener('click', () => {
