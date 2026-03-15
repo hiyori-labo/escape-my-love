@@ -932,6 +932,8 @@ body {
     font-size: 1rem;
     cursor: pointer;
     transition: all var(--transition-fast);
+    width: 100%;
+    max-width: 250px;
 }
 
 .ending-btn:hover {
@@ -1300,12 +1302,12 @@ body {
     transition: all var(--transition-normal);
 }
 
-.toggle-switch input:checked + .toggle-slider {
+.toggle-switch input:checked+.toggle-slider {
     background: var(--accent-rose-dark);
     border-color: var(--accent-rose);
 }
 
-.toggle-switch input:checked + .toggle-slider::before {
+.toggle-switch input:checked+.toggle-slider::before {
     background: var(--accent-rose-light);
     transform: translateX(22px);
 }

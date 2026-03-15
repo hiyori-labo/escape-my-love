@@ -112,6 +112,7 @@ const elements = {
     endingTitle: document.getElementById('endingTitle'),
     endingText: document.getElementById('endingText'),
     endingBtn: document.getElementById('endingBtn'),
+    endingSettingsBtn: document.getElementById('endingSettingsBtn'),
     copyFullLogBtn: document.getElementById('copyFullLogBtn'),
     copyEpilogueBtn: document.getElementById('copyEpilogueBtn'),
     // Settings elements
@@ -1158,6 +1159,13 @@ elements.saveLoadOverlay.addEventListener('click', (e) => {
 
 // Ending button
 elements.endingBtn.addEventListener('click', startNewGame);
+
+if (elements.endingSettingsBtn) {
+    elements.endingSettingsBtn.addEventListener('click', () => {
+        elements.endingOverlay.classList.remove('active');
+        openSettingsOverlay();
+    });
+}
 
 // Epilogue log copy button
 if (elements.copyEpilogueBtn) {
