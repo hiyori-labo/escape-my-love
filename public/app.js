@@ -736,7 +736,7 @@ async function triggerEnding(type) {
     const epilogue = await generateEpilogue(type);
     gameState.currentEpilogue = epilogue;
     elements.endingText.textContent = epilogue;
-    
+
     // Hide loading and show actions
     elements.endingLoading.style.display = 'none';
     elements.endingActions.style.display = 'block';
@@ -758,6 +758,12 @@ async function generateEpilogue(type) {
 
     const epiloguePrompt = `あなたは恋愛脱出ゲームのエピローグを生成するライターです。
 
+【キャラクター設定】
+名前：${s.partnerName}
+性格：${s.partnerPersonality}
+一人称：${s.partnerFirstPerson}
+二人称：${s.partnerSecondPerson} または ${s.playerName}
+
 【状況】
 プレイヤー（${s.playerName}）と${s.partnerName}（${s.relationship}）の恋愛脱出ゲームが「${endingType}」で終わりました。
 
@@ -772,6 +778,7 @@ ${historyText}
 - ${s.partnerName}の心情と二人の関係性を反映
 - ${type === 'escape' ? `脱出したプレイヤーへの${s.partnerName}の未練と再会の予感を描く` : `プレイヤーが${s.partnerName}の愛を受け入れた幸せな結末を描く`}
 - 会話内容に応じてパーソナライズされた内容にする
+- 【最重要】エピローグ内に${s.partnerName}の台詞を含める場合、上記の設定（一人称、二人称、性格）を絶対に厳守すること。
 - 純粋にエピローグのテキストのみを返す（JSON形式不要）
 - 読みやすいように、1〜2文ごとに必ず空行（改行2回）を入れて段落を分けること`;
 
@@ -841,7 +848,7 @@ function checkAndIncrementApiLimit() {
 
     const today = new Date().toDateString();
     let turnData = { date: today, count: 0 };
-    
+
     try {
         const saved = localStorage.getItem(DAILY_TURN_KEY);
         if (saved) {
@@ -861,7 +868,7 @@ function checkAndIncrementApiLimit() {
 
     turnData.count++;
     localStorage.setItem(DAILY_TURN_KEY, JSON.stringify(turnData));
-    
+
     return true;
 }
 
