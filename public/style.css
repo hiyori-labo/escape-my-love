@@ -920,6 +920,8 @@ body {
     font-size: 1.1rem;
     margin-bottom: var(--spacing-xl);
     line-height: 1.8;
+    white-space: pre-wrap;
+    text-align: left;
 }
 
 .ending-btn {
