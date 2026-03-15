@@ -229,13 +229,22 @@
             <div class="ending-content">
                 <h2 class="ending-title" id="endingTitle"></h2>
                 <p class="ending-text" id="endingText"></p>
-                <div class="ending-buttons-group">
-                    <button class="copy-epilogue-btn" id="copyEpilogueBtn">📜 エピローグのみコピー</button>
-                    <button class="copy-full-log-btn" id="copyFullLogBtn">📋 全ログをコピー</button>
+                <div class="ending-loading" id="endingLoading">
+                    <div class="typing-indicator" style="justify-content: center; margin-bottom: 16px;">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
                 </div>
-                <div style="display: flex; gap: 12px; justify-content: center; margin-top: 24px; flex-wrap: wrap;">
-                    <button class="ending-btn" id="endingBtn">もう一度プレイ</button>
-                    <button class="ending-btn" id="endingSettingsBtn">設定変更へ</button>
+                <div class="ending-actions" id="endingActions" style="display: none;">
+                    <div class="ending-buttons-group">
+                        <button class="copy-epilogue-btn" id="copyEpilogueBtn">📜 エピローグのみコピー</button>
+                        <button class="copy-full-log-btn" id="copyFullLogBtn">📋 全ログをコピー</button>
+                    </div>
+                    <div style="display: flex; gap: 12px; justify-content: center; margin-top: 24px; flex-wrap: wrap;">
+                        <button class="ending-btn" id="endingBtn">もう一度プレイ</button>
+                        <button class="ending-btn" id="endingSettingsBtn">設定変更へ</button>
+                    </div>
                 </div>
             </div>
         </div>

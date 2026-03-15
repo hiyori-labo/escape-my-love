@@ -111,6 +111,8 @@ const elements = {
     endingOverlay: document.getElementById('endingOverlay'),
     endingTitle: document.getElementById('endingTitle'),
     endingText: document.getElementById('endingText'),
+    endingLoading: document.getElementById('endingLoading'),
+    endingActions: document.getElementById('endingActions'),
     endingBtn: document.getElementById('endingBtn'),
     endingSettingsBtn: document.getElementById('endingSettingsBtn'),
     copyFullLogBtn: document.getElementById('copyFullLogBtn'),
@@ -519,6 +521,8 @@ function loadGame(slotId) {
         elements.loveGauge.style.width = `${gameState.loveTrap}%`;
         elements.loveValue.textContent = gameState.loveTrap;
         elements.endingOverlay.classList.remove('active');
+        elements.endingActions.style.display = 'none';
+        elements.endingLoading.style.display = 'block';
 
         addSystemMessage(`スロット${slotId}をロードしました`);
         closeSaveLoadOverlay();
@@ -724,12 +728,18 @@ async function triggerEnding(type) {
 
     // Show loading state
     elements.endingText.textContent = 'エピローグを生成中...';
+    elements.endingActions.style.display = 'none';
+    elements.endingLoading.style.display = 'block';
     elements.endingOverlay.classList.add('active');
 
     // Generate dynamic epilogue
     const epilogue = await generateEpilogue(type);
     gameState.currentEpilogue = epilogue;
     elements.endingText.textContent = epilogue;
+    
+    // Hide loading and show actions
+    elements.endingLoading.style.display = 'none';
+    elements.endingActions.style.display = 'block';
 }
 
 async function generateEpilogue(type) {
@@ -1085,6 +1095,8 @@ async function startNewGame() {
     // Reset UI
     elements.chatArea.innerHTML = '';
     elements.endingOverlay.classList.remove('active');
+    elements.endingActions.style.display = 'none';
+    elements.endingLoading.style.display = 'block';
     elements.sendBtn.disabled = false;
     updateParameters(0, 0);
 
