@@ -783,7 +783,7 @@ ${historyText}
 - 読みやすいように、1〜2文ごとに必ず空行（改行2回）を入れて段落を分けること`;
 
     try {
-        if (!checkAndIncrementApiLimit()) {
+        if (!checkAndIncrementApiLimit(true)) {
             showRateLimitMessage();
             return getDefaultEpilogue(type);
         }
@@ -843,8 +843,11 @@ function getDefaultEpilogue(type) {
 // API Functions
 // ========================================
 
-function checkAndIncrementApiLimit() {
+function checkAndIncrementApiLimit(isEpilogue = false) {
     if (gameState.userApiKey) return true;
+    
+    // エピローグの生成はターンの上限チェック・消費から除外する
+    if (isEpilogue) return true;
 
     const today = new Date().toDateString();
     let turnData = { date: today, count: 0 };
