@@ -1067,6 +1067,19 @@ async function processPlayerInput(input) {
             showEpilogueButton(gameState.pendingEnding);
             return;
         }
+
+        // Notify player when last free turn has been used
+        if (!gameState.userApiKey) {
+            try {
+                const saved = localStorage.getItem(DAILY_TURN_KEY);
+                if (saved) {
+                    const turnData = JSON.parse(saved);
+                    if (turnData.date === new Date().toDateString() && turnData.count >= MAX_DAILY_TURNS) {
+                        showRateLimitMessage();
+                    }
+                }
+            } catch (e) {}
+        }
     }
 
     gameState.isProcessing = false;
