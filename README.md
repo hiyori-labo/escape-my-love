@@ -24,15 +24,15 @@
 
 ### オンラインで遊ぶ
 
-👉 **[Escape My Love を遊ぶ](https://yuka-labo.github.io/escape-my-love/)**
+👉 **[Escape My Love を遊ぶ](https://escape-my-love.vercel.app/)**
 
 ### ローカルで遊ぶ
 
 ```bash
-git clone https://github.com/yuka-labo/escape-my-love.git
+git clone https://github.com/hiyori-labo/escape-my-love.git
 cd escape-my-love
-python3 -m http.server 8080
-# http://localhost:8080 をブラウザで開く
+vercel dev
+# http://localhost:3000 をブラウザで開く
 ```
 
 ### 遊ぶためのステップ（1日15ターン制限）
