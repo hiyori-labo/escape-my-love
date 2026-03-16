@@ -341,10 +341,15 @@ function formatTurnLog(turnData) {
     if (turnData.dialogue) {
         text += `${turnData.dialogue}\n`;
     }
+    if (turnData.hint && gameSettings.showHint) {
+        text += `\n💭 ヒント: ${turnData.hint}\n`;
+    }
     text += `\n`;
-    const escSign = turnData.escapeChange > 0 ? `+${turnData.escapeChange}` : '0';
-    const loveSign = turnData.loveChange > 0 ? `+${turnData.loveChange}` : '0';
-    text += `📊 パラメータ変動: 🚪脱出度 ${escSign} / 💕絆され度 ${loveSign}\n`;
+    if (gameSettings.showParamChange) {
+        const escSign = turnData.escapeChange > 0 ? `+${turnData.escapeChange}` : '0';
+        const loveSign = turnData.loveChange > 0 ? `+${turnData.loveChange}` : '0';
+        text += `📊 パラメータ変動: 🚪脱出度 ${escSign} / 💕絆され度 ${loveSign}\n`;
+    }
     text += `📊 現在値: 🚪脱出度 ${turnData.currentEscape} / 💕絆され度 ${turnData.currentLove}\n`;
     text += `━━━━━━━━━━━━━━━━━━━━`;
     return text;
@@ -662,6 +667,7 @@ function showRetryButton(lastInput) {
                 playerInput: lastInput,
                 narrative: response.narrative || '',
                 dialogue: response.dialogue || '',
+                hint: response.hint || '',
                 escapeChange: response.escape_change || 0,
                 loveChange: response.love_change || 0,
                 currentEscape: gameState.escapeProgress,
@@ -1053,6 +1059,7 @@ async function processPlayerInput(input) {
             playerInput: input,
             narrative: response.narrative || '',
             dialogue: response.dialogue || '',
+            hint: response.hint || '',
             escapeChange: response.escape_change || 0,
             loveChange: response.love_change || 0,
             currentEscape: gameState.escapeProgress,
