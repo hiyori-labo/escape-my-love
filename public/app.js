@@ -970,10 +970,12 @@ async function callGeminiAPI(userMessage, isRetry = false) {
         // If not valid JSON after retry, create a fallback response
         // Strip any partial JSON from the text for cleaner display
         const cleanText = text
+            .replace(/```json\s*/gi, '') // Remove markdown code block markers
+            .replace(/```\s*/g, '')
             .replace(/\{[\s\S]*$/, '') // Remove incomplete JSON at end
             .replace(/^[\s\S]*?\}/, '') // Remove incomplete JSON at start
             .replace(/"narrative"|"dialogue"|"escape_change"|"love_change"|"hint"/g, '')
-            .replace(/[{}":[\]]/g, '')
+            .replace(/[{}":\[\]]/g, '')
             .trim();
 
         return {
