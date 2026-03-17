@@ -565,9 +565,10 @@ function showSaveLoadOverlay(mode) {
                 minute: '2-digit'
             });
 
+            const partnerName = slot.characterSettings?.partnerName || 'クロウ';
             slotDiv.innerHTML = `
                 <div class="slot-info">
-                    <span class="slot-name">スロット${slot.id}</span>
+                    <span class="slot-name">スロット${slot.id}｜${partnerName}</span>
                     <span class="slot-detail">
                         🚪${slot.escapeProgress} 💕${slot.loveTrap} | ${dateStr}
                     </span>
