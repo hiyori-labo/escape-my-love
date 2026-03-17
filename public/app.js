@@ -433,8 +433,8 @@ function showCopyButton(turnData) {
 // ========================================
 
 function updateParameters(escapeChange = 0, loveChange = 0) {
-    gameState.escapeProgress = Math.min(100, gameState.escapeProgress + escapeChange);
-    gameState.loveTrap = Math.min(100, gameState.loveTrap + loveChange);
+    gameState.escapeProgress = Math.min(100, Math.max(0, gameState.escapeProgress + escapeChange));
+    gameState.loveTrap = Math.min(100, Math.max(0, gameState.loveTrap + loveChange));
 
     elements.escapeGauge.style.width = `${gameState.escapeProgress}%`;
     elements.escapeValue.textContent = gameState.escapeProgress;
@@ -651,7 +651,7 @@ function showRetryButton(lastInput) {
                 showRetryButton(lastInput);
             }
 
-            updateParameters(response.escape_change || 0, response.love_change || 0);
+            updateParameters(Math.max(0, response.escape_change || 0), Math.max(0, response.love_change || 0));
 
             if (gameSettings.showParamChange) {
                 if (response.escape_change > 0) {
@@ -1042,7 +1042,7 @@ async function processPlayerInput(input) {
         }
 
         // Update parameters
-        updateParameters(response.escape_change || 0, response.love_change || 0);
+        updateParameters(Math.max(0, response.escape_change || 0), Math.max(0, response.love_change || 0));
 
         // Show parameter change feedback
         if (gameSettings.showParamChange) {
