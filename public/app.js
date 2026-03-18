@@ -22,7 +22,7 @@ const DEFAULT_SETTINGS = {
     partnerPersonality: 'クールだが独占欲が強い。甘い言葉で相手を惑わし、脱出を阻止しようとする',
     partnerFirstPerson: '俺',
     partnerSecondPerson: 'お前',
-    relationship: '愛しすぎるがゆえに、部屋に閉じ込めている夫',
+    relationship: '愛しすぎるがゆえに、部屋に閉じ込めている男',
     gameSetting: '豪華な部屋。シルクのシーツ、アンティークの家具、薄暗い照明'
 };
 
@@ -165,7 +165,7 @@ function generateSystemPrompt() {
 
 【ゲームルール】
 1. プレイヤーは${s.gameSetting}に閉じ込められている
-2. 部屋にはドア（鍵がかかっている）、窓（鉄格子がある）、本棚、ベッド、クローゼット、机などがある
+2. 部屋には脱出を阻む施錠されたドアや出入口があり、舞台の雰囲気に合った家具や調度品が配置されている。プレイヤーが探索できるオブジェクトを舞台設定に合わせて自然に描写すること
 3. プレイヤーが脱出に関わる行動（ドア・窓を調べる、鍵を探すなど）をしようとすると、${s.partnerName}は必ず何らかの形で邪魔をする
 4. 邪魔の仕方：誘惑する、気をそらす、スキンシップを求める、甘い言葉で引き止めるなど
 
@@ -840,7 +840,7 @@ function getDefaultEpilogue(type) {
 
 function checkAndIncrementApiLimit(isEpilogue = false) {
     if (gameState.userApiKey) return true;
-    
+
     // エピローグの生成はターンの上限チェック・消費から除外する
     if (isEpilogue) return true;
 
@@ -1088,7 +1088,7 @@ async function processPlayerInput(input) {
                         showRateLimitMessage();
                     }
                 }
-            } catch (e) {}
+            } catch (e) { }
         }
     }
 
