@@ -24,3 +24,6 @@ temp/
 .env
 .env.local
 .vercel
+
+# Drafts
+escape_my_love_note_draft.md
