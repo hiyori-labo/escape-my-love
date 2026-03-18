@@ -1042,6 +1042,91 @@ body {
 }
 
 /* ========================================
+   How to Play Overlay
+======================================== */
+
+.howtoplay-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg-overlay);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 180;
+    opacity: 0;
+    visibility: hidden;
+    transition: all var(--transition-normal);
+}
+
+.howtoplay-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.howtoplay-content {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    width: 90%;
+    max-width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    transform: scale(0.9);
+    transition: transform var(--transition-normal);
+}
+
+.howtoplay-overlay.active .howtoplay-content {
+    transform: scale(1);
+}
+
+.howtoplay-content h2 {
+    font-family: var(--font-display);
+    color: var(--accent-rose-light);
+    margin-bottom: var(--spacing-lg);
+    text-align: center;
+    font-size: 1.2rem;
+}
+
+.howtoplay-text {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.7;
+}
+
+.howtoplay-section {
+    margin-bottom: var(--spacing-lg);
+}
+
+.howtoplay-section:last-child {
+    margin-bottom: var(--spacing-md);
+}
+
+.howtoplay-section h3 {
+    color: var(--accent-rose-light);
+    font-size: 0.95rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.howtoplay-section p {
+    margin-bottom: var(--spacing-sm);
+}
+
+.howtoplay-section ul,
+.howtoplay-section ol {
+    margin: 0;
+    padding-left: var(--spacing-lg);
+}
+
+.howtoplay-section li {
+    margin-bottom: var(--spacing-sm);
+}
+
+/* ========================================
    Responsive Design
 ======================================== */
 

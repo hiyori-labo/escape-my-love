@@ -135,6 +135,11 @@ const elements = {
     gameSettingsClose: document.getElementById('gameSettingsClose'),
     showHintToggle: document.getElementById('showHintToggle'),
     showParamChangeToggle: document.getElementById('showParamChangeToggle'),
+    // How to Play elements
+    howToPlayBtn: document.getElementById('howToPlayBtn'),
+    howToPlayOverlay: document.getElementById('howToPlayOverlay'),
+    howToPlayClose: document.getElementById('howToPlayClose'),
+    howToPlayCloseBtn: document.getElementById('howToPlayCloseBtn'),
     // Terms elements
     termsBtn: document.getElementById('termsBtn'),
     termsOverlay: document.getElementById('termsOverlay'),
@@ -1363,6 +1368,26 @@ function showRateLimitMessage() {
     elements.chatArea.appendChild(div);
     elements.chatArea.scrollTop = elements.chatArea.scrollHeight;
 }
+
+// How to Play overlay
+elements.howToPlayBtn.addEventListener('click', () => {
+    elements.howToPlayOverlay.classList.add('active');
+    elements.menuOverlay.classList.remove('active');
+});
+
+elements.howToPlayClose.addEventListener('click', () => {
+    elements.howToPlayOverlay.classList.remove('active');
+});
+
+elements.howToPlayCloseBtn.addEventListener('click', () => {
+    elements.howToPlayOverlay.classList.remove('active');
+});
+
+elements.howToPlayOverlay.addEventListener('click', (e) => {
+    if (e.target === elements.howToPlayOverlay) {
+        elements.howToPlayOverlay.classList.remove('active');
+    }
+});
 
 // Terms overlay
 elements.termsBtn.addEventListener('click', () => {

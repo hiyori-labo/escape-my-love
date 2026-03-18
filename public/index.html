@@ -78,6 +78,7 @@
                 <button class="menu-item" id="settingsBtn">⚙️ キャラクター設定</button>
                 <button class="menu-item" id="gameSettingsBtn">🎮 ゲーム設定</button>
                 <button class="menu-item" id="apiKeyBtn">🔑 APIキー設定</button>
+                <button class="menu-item menu-item-secondary" id="howToPlayBtn">📖 遊び方</button>
                 <button class="menu-item menu-item-secondary" id="termsBtn">📜 利用規約</button>
 
                 <div class="menu-footer-links">
@@ -89,6 +90,51 @@
                         🏠 制作: <span style="color: var(--accent-rose-light);">Hiyori-labo</span>
                     </a>
                 </div>
+            </div>
+        </div>
+
+        <!-- How to Play Overlay -->
+        <div class="howtoplay-overlay" id="howToPlayOverlay">
+            <div class="howtoplay-content">
+                <button class="menu-close" id="howToPlayClose">✕</button>
+                <h2>📖 遊び方</h2>
+                <div class="howtoplay-text">
+                    <div class="howtoplay-section">
+                        <h3>🎮 ゲームの目的</h3>
+                        <p>あなたは相手役に閉じ込められた部屋から<strong>脱出</strong>を目指します。<br>しかし、相手役はあなたを引き止めようと甘い誘惑を仕掛けてきます。</p>
+                    </div>
+                    <div class="howtoplay-section">
+                        <h3>📊 2つのパラメータ</h3>
+                        <ul>
+                            <li><strong>🚪 脱出度</strong> ─ 誘惑を拒否して探索を進めると上昇。100に達すると<strong>脱出成功</strong>！</li>
+                            <li><strong>💕 絆され度</strong> ─ 誘惑を受け入れると上昇。100に達すると<strong>永住確定</strong>…</li>
+                        </ul>
+                    </div>
+                    <div class="howtoplay-section">
+                        <h3>💬 遊び方</h3>
+                        <ol>
+                            <li>テキスト入力欄に<strong>行動</strong>を入力して送信します</li>
+                            <li>例：「部屋を見回す」「ドアを調べる」「話しかける」</li>
+                            <li>相手役の反応に対してどう行動するかはあなた次第！</li>
+                        </ol>
+                    </div>
+                    <div class="howtoplay-section">
+                        <h3>💡 ヒント</h3>
+                        <ul>
+                            <li>脱出したいなら、誘惑を振り切って部屋の中を探索しましょう</li>
+                            <li>甘い言葉に揺らぐのもまた一つの楽しみ方です</li>
+                            <li>メニューからいつでもセーブ・ロードができます</li>
+                        </ul>
+                    </div>
+                    <div class="howtoplay-section">
+                        <h3>⚠️ 注意事項</h3>
+                        <ul>
+                            <li>1日<strong>15ターン</strong>まで無料でプレイできます（自分のAPIキーを設定すると無制限）</li>
+                            <li>ログのコピーは<strong>プレイ中のみ</strong>可能です。アプリを閉じるとログは失われます</li>
+                        </ul>
+                    </div>
+                </div>
+                <button class="terms-close-btn" id="howToPlayCloseBtn">閉じる</button>
             </div>
         </div>
 
