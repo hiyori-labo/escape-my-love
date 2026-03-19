@@ -238,7 +238,7 @@ async function generateOpeningMessage() {
 }`;
 
     try {
-        if (!checkAndIncrementApiLimit()) {
+        if (!checkAndIncrementApiLimit(true)) {
             showRateLimitMessage();
             return null;
         }
@@ -843,11 +843,11 @@ function getDefaultEpilogue(type) {
 // API Functions
 // ========================================
 
-function checkAndIncrementApiLimit(isEpilogue = false) {
+function checkAndIncrementApiLimit(isNonTurn = false) {
     if (gameState.userApiKey) return true;
 
-    // エピローグの生成はターンの上限チェック・消費から除外する
-    if (isEpilogue) return true;
+    // オープニング・エピローグの生成はターンの上限チェック・消費から除外する
+    if (isNonTurn) return true;
 
     const today = new Date().toDateString();
     let turnData = { date: today, count: 0 };
