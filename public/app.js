@@ -15,6 +15,47 @@ const DAILY_TURN_KEY = 'crows_cage_daily_turns';
 const MAX_DAILY_TURNS = 15;
 const MAX_SAVE_SLOTS = 3;
 
+// Safety settings for Gemini API (relaxed for romance game content)
+const SAFETY_SETTINGS = [
+    { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
+    { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
+    { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
+    { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
+];
+
+/**
+ * Check if API response was blocked by safety filters.
+ * Returns { blocked: true, reason: string } or { blocked: false }.
+ */
+function checkSafetyBlock(data) {
+    // Check promptFeedback for input-level blocks
+    const blockReason = data.promptFeedback?.blockReason;
+    if (blockReason) {
+        return { blocked: true, reason: blockReason };
+    }
+
+    // Check candidate-level finish reason
+    const finishReason = data.candidates?.[0]?.finishReason;
+    if (finishReason === 'SAFETY') {
+        return { blocked: true, reason: 'SAFETY' };
+    }
+
+    // Check if response is empty (no candidates at all)
+    if (!data.candidates || data.candidates.length === 0) {
+        return { blocked: true, reason: 'NO_CANDIDATES' };
+    }
+
+    return { blocked: false };
+}
+
+function addSafetyBlockMessage() {
+    const div = document.createElement('div');
+    div.className = 'message message-system';
+    div.innerHTML = '⚠️ AIの安全フィルタにより応答が生成できませんでした。<br>別の言い回しで入力してみてください。';
+    elements.chatArea.appendChild(div);
+    scrollToBottom();
+}
+
 // Default character settings
 const DEFAULT_SETTINGS = {
     playerName: 'ひより',
@@ -115,8 +156,8 @@ const elements = {
     endingActions: document.getElementById('endingActions'),
     endingBtn: document.getElementById('endingBtn'),
     endingSettingsBtn: document.getElementById('endingSettingsBtn'),
-    copyFullLogBtn: document.getElementById('copyFullLogBtn'),
     copyEpilogueBtn: document.getElementById('copyEpilogueBtn'),
+    endingLoadBtn: document.getElementById('endingLoadBtn'),
     // Settings elements
     settingsBtn: document.getElementById('settingsBtn'),
     settingsOverlay: document.getElementById('settingsOverlay'),
@@ -250,7 +291,11 @@ async function generateOpeningMessage() {
                 type: 'opening',
                 body: {
                     contents: [{ role: 'user', parts: [{ text: prompt }] }],
-                    generationConfig: { temperature: 0.8 }
+                    generationConfig: {
+                        temperature: 0.8,
+                        responseMimeType: 'application/json'
+                    },
+                    safetySettings: SAFETY_SETTINGS
                 },
                 ...(gameState.userApiKey && { userApiKey: gameState.userApiKey })
             })
@@ -263,6 +308,14 @@ async function generateOpeningMessage() {
         if (!response.ok) throw new Error('API Error');
 
         const data = await response.json();
+
+        // Check for safety filter blocks
+        const safetyCheck = checkSafetyBlock(data);
+        if (safetyCheck.blocked) {
+            console.warn('Opening blocked by safety filter:', safetyCheck.reason);
+            return getDefaultOpeningMessage();
+        }
+
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
         if (text) {
@@ -358,37 +411,6 @@ function formatTurnLog(turnData) {
     text += `📊 現在値: 🚪脱出度 ${turnData.currentEscape} / 💕絆され度 ${turnData.currentLove}\n`;
     text += `━━━━━━━━━━━━━━━━━━━━`;
     return text;
-}
-
-function formatFullLog(endingType) {
-    const s = characterSettings;
-    const result = endingType === 'escape' ? '🚪 脱出成功' : '💕 永住確定';
-    let text = `🎮 Escape My Love - Full Game Log\n`;
-    text += `結果: ${result}\n`;
-    text += `━━━━━━━━━━━━━━━━━━━━\n\n`;
-
-    gameState.turnLogs.forEach((turn, i) => {
-        text += `--- Turn ${i + 1} ---\n`;
-        text += `🗣️ プレイヤー: ${turn.playerInput}\n`;
-        text += `📖 ${s.partnerName}:\n`;
-        if (turn.narrative) {
-            text += `${turn.narrative}\n`;
-        }
-        if (turn.dialogue) {
-            text += `${turn.dialogue}\n`;
-        }
-        const escSign = turn.escapeChange > 0 ? `+${turn.escapeChange}` : '0';
-        const loveSign = turn.loveChange > 0 ? `+${turn.loveChange}` : '0';
-        text += `📊 変動: 🚪脱出度 ${escSign} / 💕絆され度 ${loveSign}\n`;
-        text += `📊 現在値: 🚪脱出度 ${turn.currentEscape} / 💕絆され度 ${turn.currentLove}\n\n`;
-    });
-
-    if (gameState.currentEpilogue) {
-        text += `--- Epilogue ---\n`;
-        text += `${gameState.currentEpilogue}\n\n`;
-    }
-
-    return text.trim();
 }
 
 async function copyToClipboard(text, buttonEl) {
@@ -518,6 +540,7 @@ function loadGame(slotId) {
         gameState.isGameOver = false;
         gameState.isProcessing = false;
 
+
         // Restore UI
         elements.chatArea.innerHTML = saveData.chatHTML;
         elements.escapeGauge.style.width = `${gameState.escapeProgress}%`;
@@ -527,6 +550,7 @@ function loadGame(slotId) {
         elements.endingOverlay.classList.remove('active');
         elements.endingActions.style.display = 'none';
         elements.endingLoading.style.display = 'block';
+        elements.sendBtn.disabled = false;
 
         addSystemMessage(`スロット${slotId}をロードしました`);
         closeSaveLoadOverlay();
@@ -803,7 +827,8 @@ ${historyText}
                     contents: [{ role: 'user', parts: [{ text: epiloguePrompt }] }],
                     generationConfig: {
                         temperature: 0.8
-                    }
+                    },
+                    safetySettings: SAFETY_SETTINGS
                 },
                 ...(gameState.userApiKey && { userApiKey: gameState.userApiKey })
             })
@@ -818,6 +843,14 @@ ${historyText}
         }
 
         const data = await response.json();
+
+        // Check for safety filter blocks
+        const safetyCheck = checkSafetyBlock(data);
+        if (safetyCheck.blocked) {
+            console.warn('Epilogue blocked by safety filter:', safetyCheck.reason);
+            return getDefaultEpilogue(type);
+        }
+
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
         if (text) {
@@ -901,7 +934,9 @@ async function callGeminiAPI(userMessage, isRetry = false) {
             topK: 40,
             topP: 0.95,
             maxOutputTokens: 1024,
-        }
+            responseMimeType: 'application/json',
+        },
+        safetySettings: SAFETY_SETTINGS
     };
 
     try {
@@ -930,6 +965,19 @@ async function callGeminiAPI(userMessage, isRetry = false) {
         }
 
         const data = await response.json();
+
+        // Check for safety filter blocks
+        const safetyCheck = checkSafetyBlock(data);
+        if (safetyCheck.blocked) {
+            console.warn('Response blocked by safety filter:', safetyCheck.reason);
+            // Remove user message from history if it was added on this attempt
+            if (!isRetry && gameState.history.length > 0 && gameState.history[gameState.history.length - 1].role === 'user') {
+                gameState.history.pop();
+            }
+            addSafetyBlockMessage();
+            return null;
+        }
+
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
         if (!text) {
@@ -1210,11 +1258,13 @@ if (elements.copyEpilogueBtn) {
     });
 }
 
-// Full log copy button
-elements.copyFullLogBtn.addEventListener('click', () => {
-    const logText = formatFullLog(gameState.endingType || 'love');
-    copyToClipboard(logText, elements.copyFullLogBtn);
-});
+// Load from ending screen
+if (elements.endingLoadBtn) {
+    elements.endingLoadBtn.addEventListener('click', () => {
+        elements.endingOverlay.classList.remove('active');
+        showSaveLoadOverlay('load');
+    });
+}
 
 // ========================================
 // Settings
