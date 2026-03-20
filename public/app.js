@@ -1089,6 +1089,14 @@ async function processPlayerInput(input) {
     hideTypingIndicator();
 
     if (response) {
+        // Update parameters first to determine if ending is triggered
+        updateParameters(Math.max(0, response.escape_change || 0), Math.max(0, response.love_change || 0));
+
+        // Hide hint on the turn where ending is triggered
+        if (gameState.pendingEnding) {
+            response.hint = '';
+        }
+
         // Show Crow's response
         addMessage(formatCrowMessage(response), 'crow');
 
@@ -1096,9 +1104,6 @@ async function processPlayerInput(input) {
         if (response.isFallback) {
             showRetryButton(input);
         }
-
-        // Update parameters
-        updateParameters(Math.max(0, response.escape_change || 0), Math.max(0, response.love_change || 0));
 
         // Show parameter change feedback
         if (gameSettings.showParamChange) {
