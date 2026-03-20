@@ -447,10 +447,8 @@ function showCopyButton(turnData) {
     const copyBtn = document.createElement('button');
     copyBtn.className = 'copy-log-btn';
     copyBtn.textContent = '📋 ログをコピー';
-    copyBtn.addEventListener('click', () => {
-        const logText = formatTurnLog(turnData);
-        copyToClipboard(logText, copyBtn);
-    });
+    const logText = formatTurnLog(turnData);
+    copyBtn.setAttribute('data-log', encodeURIComponent(logText));
     elements.chatArea.appendChild(copyBtn);
     scrollToBottom();
 }
@@ -508,6 +506,7 @@ function saveGame(slotId) {
         escapeProgress: gameState.escapeProgress,
         loveTrap: gameState.loveTrap,
         history: gameState.history,
+        turnLogs: gameState.turnLogs,
         chatHTML: elements.chatArea.innerHTML,
         characterSettings: characterSettings
     };
@@ -537,9 +536,19 @@ function loadGame(slotId) {
         gameState.escapeProgress = saveData.escapeProgress;
         gameState.loveTrap = saveData.loveTrap;
         gameState.history = saveData.history;
+        gameState.turnLogs = saveData.turnLogs || [];
         gameState.isGameOver = false;
         gameState.isProcessing = false;
-
+        gameState.currentEpilogue = '';
+        gameState.endingType = null;
+        
+        if (gameState.escapeProgress >= 100) {
+            gameState.pendingEnding = 'escape';
+        } else if (gameState.loveTrap >= 100) {
+            gameState.pendingEnding = 'love';
+        } else {
+            gameState.pendingEnding = null;
+        }
 
         // Restore UI
         elements.chatArea.innerHTML = saveData.chatHTML;
@@ -1165,6 +1174,7 @@ async function startNewGame() {
     gameState.isProcessing = false;
     gameState.pendingEnding = null;
     gameState.currentEpilogue = '';
+    gameState.endingType = null;
 
     // Reset UI
     elements.chatArea.innerHTML = '';
@@ -1193,6 +1203,24 @@ async function startNewGame() {
 // ========================================
 // Event Listeners
 // ========================================
+
+// Log copy delegation
+elements.chatArea.addEventListener('click', (e) => {
+    if (e.target.classList.contains('copy-log-btn')) {
+        const logData = e.target.getAttribute('data-log');
+        if (logData) {
+            copyToClipboard(decodeURIComponent(logData), e.target);
+        } else {
+            // Fallback for older saves where data-log might not exist
+            const btns = Array.from(elements.chatArea.querySelectorAll('.copy-log-btn'));
+            const index = btns.indexOf(e.target);
+            if (index >= 0 && gameState.turnLogs && gameState.turnLogs[index]) {
+                const logText = formatTurnLog(gameState.turnLogs[index]);
+                copyToClipboard(logText, e.target);
+            }
+        }
+    }
+});
 
 // Form submission
 elements.inputForm.addEventListener('submit', (e) => {
